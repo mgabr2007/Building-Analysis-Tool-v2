@@ -109,6 +109,12 @@ def generate_insights(df):
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
 
+# Initialize session state for storing the user's analysis choice
+if 'analysis_choice' not in st.session_state:
+    st.session_state.analysis_choice = None
+
+def set_analysis_choice(choice):
+    st.session_state.analysis_choice = choice
 def main():
     st.sidebar.title("Analysis Options")
     # Create buttons for each analysis type and use callbacks to set the choice
