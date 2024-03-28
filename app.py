@@ -127,6 +127,14 @@ def welcome_page():
         set_analysis_choice("Excel File Analysis")
 
 def main():
+    st.sidebar.title("Navigation")
+    if st.sidebar.button("Home"):
+        set_analysis_choice("Welcome")
+    if st.sidebar.button("Analyze IFC File"):
+        set_analysis_choice("IFC File Analysis")
+    if st.sidebar.button("Analyze Excel File"):
+        set_analysis_choice("Excel File Analysis")
+
     if st.session_state.analysis_choice == 'Welcome':
         welcome_page()
     elif st.session_state.analysis_choice == "IFC File Analysis":
