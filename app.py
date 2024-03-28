@@ -58,7 +58,13 @@ def detailed_analysis(ifc_file, product_type, sort_by=None):
             st.table(df)
     else:
         st.write(f"No products found for {product_type}.")
+# Initialize session state for storing the user's analysis choice
+if 'analysis_choice' not in st.session_state:
+    st.session_state.analysis_choice = None
 
+def set_analysis_choice(choice):
+    st.session_state.analysis_choice = choice
+    
 def ifc_file_analysis():
     uploaded_file = st.file_uploader("Choose an IFC file", type=['ifc'], key="ifc")
     if uploaded_file is not None:
@@ -109,10 +115,6 @@ def generate_insights(df):
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
 
-# Initialize session state for storing the user's analysis choice
-if 'analysis_choice' not in st.session_state:
-    st.session_state.analysis_choice = None
-
 def set_analysis_choice(choice):
     st.session_state.analysis_choice = choice
 def main():
@@ -122,7 +124,11 @@ def main():
         set_analysis_choice("IFC File Analysis")
     if st.sidebar.button("Excel File Analysis"):
         set_analysis_choice("Excel File Analysis")
-
+    # Execute the corresponding analysis function based on the user's choice
+    if st.session_state.analysis_choice == "IFC File Analysis":
+        ifc_file_analysis()
+    elif st.session_state.analysis_choice == "Excel File Analysis":
+        excel_file_analysis()
 if __name__ == "__main__":
     main()
 
