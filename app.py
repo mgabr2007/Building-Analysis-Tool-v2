@@ -60,7 +60,7 @@ def detailed_analysis(ifc_file, product_type, sort_by=None):
         st.write(f"No products found for {product_type}.")
 # Initialize session state for storing the user's analysis choice
 if 'analysis_choice' not in st.session_state:
-    st.session_state.analysis_choice = None
+    st.session_state.analysis_choice = 'Welcome'
 
 def set_analysis_choice(choice):
     st.session_state.analysis_choice = choice
@@ -115,20 +115,25 @@ def generate_insights(df):
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
 
-def set_analysis_choice(choice):
-    st.session_state.analysis_choice = choice
-def main():
-    st.sidebar.title("Analysis Options")
-    # Create buttons for each analysis type and use callbacks to set the choice
-    if st.sidebar.button("IFC File Analysis"):
+def welcome_page():
+    st.title("Welcome to the Analysis App")
+    st.write("""
+    This app allows you to perform detailed analysis on IFC and Excel files. 
+    Choose one of the following options to get started:
+    """)
+    if st.button("Analyze IFC File"):
         set_analysis_choice("IFC File Analysis")
-    if st.sidebar.button("Excel File Analysis"):
+    if st.button("Analyze Excel File"):
         set_analysis_choice("Excel File Analysis")
-    # Execute the corresponding analysis function based on the user's choice
-    if st.session_state.analysis_choice == "IFC File Analysis":
+
+def main():
+    if st.session_state.analysis_choice == 'Welcome':
+        welcome_page()
+    elif st.session_state.analysis_choice == "IFC File Analysis":
         ifc_file_analysis()
     elif st.session_state.analysis_choice == "Excel File Analysis":
         excel_file_analysis()
+
 if __name__ == "__main__":
     main()
 
