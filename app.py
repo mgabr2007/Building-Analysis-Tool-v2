@@ -111,12 +111,11 @@ def generate_insights(df):
 
 def main():
     st.sidebar.title("Analysis Options")
-    app_mode = st.sidebar.selectbox("Choose the type of analysis", ["IFC File Analysis", "Excel File Analysis"])
-
-    if app_mode == "IFC File Analysis":
-        ifc_file_analysis()
-    elif app_mode == "Excel File Analysis":
-        excel_file_analysis()
+    # Create buttons for each analysis type and use callbacks to set the choice
+    if st.sidebar.button("IFC File Analysis"):
+        set_analysis_choice("IFC File Analysis")
+    if st.sidebar.button("Excel File Analysis"):
+        set_analysis_choice("Excel File Analysis")
 
 if __name__ == "__main__":
     main()
