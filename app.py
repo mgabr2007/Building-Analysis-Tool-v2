@@ -121,9 +121,9 @@ def welcome_page():
     This app allows you to perform detailed analysis on IFC and Excel files. 
     Choose one of the following options to get started:
     """)
-    if st.button("Analyze IFC File"):
+    if st.sidebar.button("Analyze IFC File"):
         set_analysis_choice("IFC File Analysis")
-    if st.button("Analyze Excel File"):
+    if st.sidebar.button("Analyze Excel File"):
         set_analysis_choice("Excel File Analysis")
 
 def main():
