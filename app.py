@@ -20,11 +20,13 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import ifcopenshell
-import matplotlib.pyplot as plt
 from collections import defaultdict
 import tempfile
 import os
-import plotly.express as px  # For interactive plots
+from plotly.io import to_image
+from fpdf import FPDF
+from PIL import Image
+import io
 
 # Function to count building components in an IFC file
 def count_building_components(ifc_file):
@@ -45,44 +47,39 @@ def read_excel(file):
         st.error(f"Failed to read Excel file: {e}")
         return pd.DataFrame()
 
-# Unified visualization function for both bar and pie charts using Plotly
+# Function to convert Plotly figures to PDF
+def fig_to_pdf(fig, filename='visualization.pdf'):
+    img_bytes = to_image(fig, format='png')
+    img = Image.open(io.BytesIO(img_bytes))
+    pdf = FPDF(unit="pt", format=[img.width, img.height])
+    pdf.add_page()
+    pdf.image(img, 0, 0)
+    pdf.output(filename)
+
+    return filename
+
+# Visualization function for both bar and pie charts using Plotly
 def visualize_component_count(component_count, chart_type='bar'):
+    import plotly.express as px
     labels, values = zip(*sorted(component_count.items(), key=lambda item: item[1], reverse=True)) if component_count else ((), ())
     if chart_type == 'bar':
         fig = px.bar(x=labels, y=values)
     elif chart_type == 'pie':
         fig = px.pie(values=values, names=labels)
-    fig.update_layout(transition_duration=500)
-    return fig
+    st.plotly_chart(fig, use_container_width=True)
 
-def detailed_analysis(ifc_file, product_type, sort_by=None):
-    product_count = defaultdict(int)
-    try:
-        for product in ifc_file.by_type(product_type):
-            product_name = product.Name if product.Name else "Unnamed"
-            type_name = product_name.split(':')[0] if product_name else "Unnamed"
-            product_count[type_name] += 1
-    except Exception as e:
-        st.error(f"Error during detailed analysis: {e}")
-        return
+    # Export to PDF button
+    if st.button('Export to PDF'):
+        pdf_path = fig_to_pdf(fig)
+        with open(pdf_path, "rb") as pdf_file:
+            PDFbyte = pdf_file.read()
+        
+        st.download_button(label="Download PDF",
+                           data=PDFbyte,
+                           file_name="visualization.pdf",
+                           mime="application/octet-stream")
 
-    labels, values = zip(*product_count.items()) if product_count else ((), ())
-    if values:
-        fig = px.pie(values=values, names=labels, title=f"Distribution of {product_type} Products by Type")
-        st.plotly_chart(fig)
-
-        if sort_by:
-            df = pd.DataFrame({'Type': labels, 'Count': values}).sort_values(by=sort_by, ascending=False)
-            st.table(df)
-    else:
-        st.write(f"No products found for {product_type}.")
-# Initialize session state for storing the user's analysis choice
-if 'analysis_choice' not in st.session_state:
-    st.session_state.analysis_choice = 'Welcome'
-
-def set_analysis_choice(choice):
-    st.session_state.analysis_choice = choice
-    
+# Analysis functions...
 def ifc_file_analysis():
     uploaded_file = st.file_uploader("Choose an IFC file", type=['ifc'], key="ifc")
     if uploaded_file is not None:
@@ -95,88 +92,23 @@ def ifc_file_analysis():
                 ifc_file = ifcopenshell.open(tmp_file_path)
                 component_count = count_building_components(ifc_file)
                 chart_type = st.radio("Chart Type", ['bar', 'pie'], key="chart")
-                fig = visualize_component_count(component_count, chart_type)
-                st.plotly_chart(fig)
-
-                with st.expander("Show Detailed Component Analysis"):
-                    product_types = sorted({entity.is_a() for entity in ifc_file.by_type('IfcProduct')})
-                    selected_product_type = st.selectbox("Select a product type for detailed analysis", product_types, key="product_type")
-                    sort_by = st.radio("Sort by", ["Type", "Count"], key="sort")
-                    detailed_analysis(ifc_file, selected_product_type, sort_by)
+                visualize_component_count(component_count, chart_type)
             finally:
                 os.remove(tmp_file_path)
 
-def excel_file_analysis():
-    uploaded_file = st.file_uploader("Upload an Excel file", type=['xlsx'], key="excel")
-    if uploaded_file is not None:
-        df = read_excel(uploaded_file)
-        if not df.empty:
-            selected_columns = st.multiselect("Select columns to display", df.columns.tolist(), default=df.columns.tolist(), key="columns")
-            if selected_columns:
-                st.dataframe(df[selected_columns])
-                if st.button("Visualize Data", key="visualize"):
-                    visualize_data(df, selected_columns)
-                if st.button("Generate Insights", key="insights"):
-                    generate_insights(df[selected_columns])
-
-def visualize_data(df, columns):
-    for column in columns:
-        if pd.api.types.is_numeric_dtype(df[column]):
-            fig = px.histogram(df, x=column)
-            st.plotly_chart(fig)
-        else:
-            fig = px.bar(df, x=column, title=f"Bar chart of {column}")
-            st.plotly_chart(fig)
-
-def generate_insights(df):
-    if not df.empty:
-        st.write("Descriptive Statistics:", df.describe())
-        # Placeholder for more sophisticated analysis or predictive modeling
-
-def welcome_page():
-    st.title("IFC and Excel File Analysis Tool")
-    st.write("""
-
-This Streamlit application provides an interactive interface for analyzing
-IFC (Industry Foundation Classes) files and Excel spreadsheets. It allows
-users to visualize component counts in IFC files and perform data analysis
-and visualization on Excel files.
-
-License:
-This project is licensed under the GNU General Public License v3.0.
-For more details, see the LICENSE file in the root directory of this source tree
-or visit https://www.gnu.org/licenses/gpl-3.0.en.html.
-
-Copyright:
-Copyright (C) [2024] [Mostafa Gabr].
-All rights reserved.
-
-""")
-
+# Main function...
 def main():
-    st.sidebar.title("Navigation")
-    if st.sidebar.button("Home"):
-        set_analysis_choice("Welcome")
-    if st.sidebar.button("Analyze IFC File"):
-        set_analysis_choice("IFC File Analysis")
-    if st.sidebar.button("Analyze Excel File"):
-        set_analysis_choice("Excel File Analysis")
+    st.title("IFC and Excel File Analysis Tool")
+    app_mode = st.sidebar.selectbox("Choose the type of analysis", ["Welcome", "IFC File Analysis", "Excel File Analysis"])
 
-    if st.session_state.analysis_choice == 'Welcome':
-        welcome_page()
-    elif st.session_state.analysis_choice == "IFC File Analysis":
+    if app_mode == "Welcome":
+        st.write("Select an analysis type from the sidebar to get started.")
+    elif app_mode == "IFC File Analysis":
         ifc_file_analysis()
-    elif st.session_state.analysis_choice == "Excel File Analysis":
-        excel_file_analysis()
+    elif app_mode == "Excel File Analysis":
+        # Placeholder for Excel analysis functionality
+        st.write("Excel file analysis functionality will be here.")
 
 if __name__ == "__main__":
     main()
 
-# Add copyright notice and license information to the sidebar
-st.sidebar.markdown("""
-----------------
-#### Copyright Notice
-Copyright (C) [2024] [Mostafa Gabr]. All rights reserved.
-
-This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
-""")
