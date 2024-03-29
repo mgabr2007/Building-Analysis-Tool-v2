@@ -132,7 +132,32 @@ def generate_insights(df):
     if not df.empty:
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
+# Comparison Analysis Functions
+def compare_ifc_files(ifc_file1, ifc_file2):
+    component_count1 = count_building_components(ifc_file1)
+    component_count2 = count_building_components(ifc_file2)
+    comparison_result = {}
+    
+    all_keys = set(component_count1.keys()).union(set(component_count2.keys()))
+    for key in all_keys:
+        count1 = component_count1.get(key, 0)
+        count2 = component_count2.get(key, 0)
+        comparison_result[key] = {'File 1': count1, 'File 2': count2, 'Difference': count1 - count2}
+    
+    return comparison_result
 
+def compare_excel_files(df1, df2, columns):
+    comparison_result = {}
+    for column in columns:
+        if pd.api.types.is_numeric_dtype(df1[column]) and pd.api.types.is_numeric_dtype(df2[column]):
+            mean1, mean2 = df1[column].mean(), df2[column].mean()
+            sum1, sum2 = df1[column].sum(), df2[column].sum()
+            comparison_result[column] = {
+                'Mean File 1': mean1, 'Mean File 2': mean2, 'Mean Difference': mean1 - mean2,
+                'Sum File 1': sum1, 'Sum File 2': sum2, 'Sum Difference': sum1 - sum2
+            }
+    return comparison_result
+    
 def welcome_page():
     st.title("IFC and Excel File Analysis Tool")
     st.write("""
@@ -153,25 +178,55 @@ All rights reserved.
 
 """)
 
+# Main function with UI for file analysis and comparison
 def main():
     st.sidebar.title("Navigation")
-    if st.sidebar.button("Home"):
-        set_analysis_choice("Welcome")
-    if st.sidebar.button("Analyze IFC File"):
-        set_analysis_choice("IFC File Analysis")
-    if st.sidebar.button("Analyze Excel File"):
-        set_analysis_choice("Excel File Analysis")
-
-    if st.session_state.analysis_choice == 'Welcome':
+    analysis_options = ["Welcome", "Analyze IFC File", "Analyze Excel File", "Compare IFC Files", "Compare Excel Files"]
+    choice = st.sidebar.radio("Choose an option:", analysis_options)
+    
+    if choice == "Welcome":
         welcome_page()
-    elif st.session_state.analysis_choice == "IFC File Analysis":
+    elif choice == "Analyze IFC File":
         ifc_file_analysis()
-    elif st.session_state.analysis_choice == "Excel File Analysis":
+    elif choice == "Analyze Excel File":
         excel_file_analysis()
+    elif choice == "Compare IFC Files":
+        st.title("Compare IFC Files")
+        uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
+        uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
+        
+        if uploaded_file1 and uploaded_file2:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
+                tmp_file1.write(uploaded_file1.getvalue())
+                tmp_file2.write(uploaded_file2.getvalue())
+                tmp_file1_path = tmp_file1.name
+                tmp_file2_path = tmp_file2.name
+            
+            try:
+                ifc_file1 = ifcopenshell.open(tmp_file1_path)
+                ifc_file2 = ifcopenshell.open(tmp_file2_path)
+                comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
+                st.write(comparison_result)  # You may want to present this data in a more user-friendly format
+            finally:
+                os.remove(tmp_file1_path)
+                os.remove(tmp_file2_path)
+    elif choice == "Compare Excel Files":
+        st.title("Compare Excel Files")
+        uploaded_file1 = st.file_uploader("Upload the first Excel file", type=['xlsx'], key="excel1")
+        uploaded_file2 = st.file_uploader("Upload the second Excel file", type=['xlsx'], key="excel2")
+        
+        if uploaded_file1 and uploaded_file2:
+            df1 = read_excel(uploaded_file1)
+            df2 = read_excel(uploaded_file2)
+            if not df1.empty and not df2.empty:
+                common_columns = list(set(df1.columns) & set(df2.columns))
+                selected_columns = st.multiselect("Select columns to compare", common_columns, default=common_columns)
+                if selected_columns:
+                    comparison_result = compare_excel_files(df1, df2, selected_columns)
+                    st.write(comparison_result)  # Adjust presentation format as needed
 
 if __name__ == "__main__":
     main()
-
 # Add copyright notice and license information to the sidebar
 st.sidebar.markdown("""
 ----------------
