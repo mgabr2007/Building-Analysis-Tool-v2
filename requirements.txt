@@ -5,3 +5,5 @@ ifcopenshell
 matplotlib
 plotly
 openpyxl
+fpdf2
+Pillow
