@@ -178,52 +178,38 @@ All rights reserved.
 
 """)
 
-# Main function with UI for file analysis and comparison
+# Main function updated for button-based navigation
 def main():
     st.sidebar.title("Navigation")
-    analysis_options = ["Welcome", "Analyze IFC File", "Analyze Excel File", "Compare IFC Files", "Compare Excel Files"]
-    choice = st.sidebar.radio("Choose an option:", analysis_options)
-    
-    if choice == "Welcome":
+    # Navigation buttons
+    if st.sidebar.button("Home"):
+        set_analysis_choice("Welcome")
+    if st.sidebar.button("Analyze IFC File"):
+        set_analysis_choice("Analyze IFC File")
+    if st.sidebar.button("Analyze Excel File"):
+        set_analysis_choice("Analyze Excel File")
+    if st.sidebar.button("Compare IFC Files"):
+        set_analysis_choice("Compare IFC Files")
+    if st.sidebar.button("Compare Excel Files"):
+        set_analysis_choice("Compare Excel Files")
+
+    # Default page to show if no button has been clicked yet
+    if 'analysis_choice' not in st.session_state:
+        st.session_state.analysis_choice = "Welcome"
+
+    # Switch case to display the selected page
+    if st.session_state.analysis_choice == "Welcome":
         welcome_page()
-    elif choice == "Analyze IFC File":
+    elif st.session_state.analysis_choice == "Analyze IFC File":
         ifc_file_analysis()
-    elif choice == "Analyze Excel File":
+    elif st.session_state.analysis_choice == "Analyze Excel File":
         excel_file_analysis()
-    elif choice == "Compare IFC Files":
-        st.title("Compare IFC Files")
-        uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
-        uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
-        
-        if uploaded_file1 and uploaded_file2:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
-                tmp_file1.write(uploaded_file1.getvalue())
-                tmp_file2.write(uploaded_file2.getvalue())
-                tmp_file1_path = tmp_file1.name
-                tmp_file2_path = tmp_file2.name
-            
-            try:
-                ifc_file1 = ifcopenshell.open(tmp_file1_path)
-                ifc_file2 = ifcopenshell.open(tmp_file2_path)
-                comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
-                st.write(comparison_result)  # You may want to present this data in a more user-friendly format
-            finally:
-                os.remove(tmp_file1_path)
-                os.remove(tmp_file2_path)
-    elif choice == "Compare Excel Files":
-        st.title("Compare Excel Files")
-        uploaded_file1 = st.file_uploader("Upload the first Excel file", type=['xlsx'], key="excel1")
-        uploaded_file2 = st.file_uploader("Upload the second Excel file", type=['xlsx'], key="excel2")
-        
-        if uploaded_file1 and uploaded_file2:
-            df1 = read_excel(uploaded_file1)
-            df2 = read_excel(uploaded_file2)
-            if not df1.empty and not df2.empty:
-                common_columns = list(set(df1.columns) & set(df2.columns))
-                selected_columns = st.multiselect("Select columns to compare", common_columns, default=common_columns)
-                if selected_columns:
-                    comparison_result = compare_excel_files(df1, df2, selected_columns)
-                    st.write(comparison_result)  # Adjust presentation format as needed
+    elif st.session_state.analysis_choice == "Compare IFC Files":
+        compare_ifc_files_ui()  # This is a placeholder for your IFC files comparison UI
+    elif st.session_state.analysis_choice == "Compare Excel Files":
+        compare_excel_files_ui()  # This is a placeholder for your Excel files comparison UI
+
+# Define your page functions like welcome_page(), ifc_file_analysis(), excel_file_analysis(), compare_ifc_files_ui(), and compare_excel_files_ui() here
 
 if __name__ == "__main__":
     main()
