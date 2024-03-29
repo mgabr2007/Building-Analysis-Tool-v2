@@ -94,7 +94,7 @@ def ifc_file_analysis():
             try:
                 ifc_file = ifcopenshell.open(tmp_file_path)
                 component_count = count_building_components(ifc_file)
-                chart_type = st.button("Chart Type", ['bar', 'pie'], key="chart")
+                chart_type = st.select_slider("Chart Type", options=['bar', 'pie'], value='pie', key="chart")
                 fig = visualize_component_count(component_count, chart_type)
                 st.plotly_chart(fig)
 
