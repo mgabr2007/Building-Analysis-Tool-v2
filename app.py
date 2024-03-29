@@ -46,11 +46,11 @@ def read_excel(file):
         return pd.DataFrame()
 
 # Unified visualization function for both bar and pie charts using Plotly
-def visualize_component_count(component_count, chart_type='bar'):
+def visualize_component_count(component_count, chart_type='Bar Chart'):
     labels, values = zip(*sorted(component_count.items(), key=lambda item: item[1], reverse=True)) if component_count else ((), ())
-    if chart_type == 'bar':
+    if chart_type == 'Bar Chart':
         fig = px.bar(x=labels, y=values)
-    elif chart_type == 'pie':
+    elif chart_type == 'Pie Chart':
         fig = px.pie(values=values, names=labels)
     fig.update_layout(transition_duration=500)
     return fig
