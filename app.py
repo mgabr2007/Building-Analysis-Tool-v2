@@ -25,9 +25,6 @@ from collections import defaultdict
 import tempfile
 import os
 import plotly.express as px  # For interactive plots
-from fpdf import FPDF
-from io import BytesIO
-import base64
 
 # Function to count building components in an IFC file
 def count_building_components(ifc_file):
@@ -135,38 +132,6 @@ def generate_insights(df):
     if not df.empty:
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
-# Function to convert Plotly figures into images and then into PDF
-def convert_plotly_fig_to_pdf(fig, filename="visualization.pdf"):
-    # Save the Plotly figure to an image
-    fig_path = "temp_figure.png"
-    fig.write_image(fig_path)
-    # Create a PDF using FPDF and add the image
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.image(fig_path, 10, 8, 190)  # Adjust as needed
-    # Save PDF to a bytes buffer
-    pdf_output = BytesIO()
-    pdf.output(pdf_output, 'F')
-    pdf_output.seek(0)
-    os.remove(fig_path)  # Clean up the image file
-    # Convert the bytes buffer to a Base64 encoded string and create a download link
-    b64 = base64.b64encode(pdf_output.read()).decode()
-    href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">Download PDF</a>'
-    return href
-
-# Visualization function adjusted to save figures
-def visualize_component_count(component_count, chart_type='bar'):
-    labels, values = zip(*sorted(component_count.items(), key=lambda item: item[1], reverse=True)) if component_count else ((), ())
-    if chart_type == 'bar':
-        fig = px.bar(x=labels, y=values)
-    elif chart_type == 'pie':
-        fig = px.pie(values=values, names=labels)
-    fig.update_layout(transition_duration=500)
-    # Return the figure for further processing (e.g., saving as PDF)
-    return fig
-
-# Adjusted analysis functions to include PDF export feature...
-# Ensure these functions call visualize_component_count and then use the returned figure for PDF conversion
 
 def welcome_page():
     st.title("IFC and Excel File Analysis Tool")
