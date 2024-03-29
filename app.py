@@ -1,49 +1,88 @@
+"""
+IFC and Excel File Analysis Tool
+
+This Streamlit application provides an interactive interface for analyzing
+IFC (Industry Foundation Classes) files and Excel spreadsheets. It allows
+users to visualize component counts in IFC files and perform data analysis
+and visualization on Excel files.
+
+License:
+This project is licensed under the GNU General Public License v3.0.
+For more details, see the LICENSE file in the root directory of this source tree
+or visit https://www.gnu.org/licenses/gpl-3.0.en.html.
+
+Copyright:
+Copyright (C) [2024] [Mostafa Gabr].
+All rights reserved.
+
+"""
 import streamlit as st
 import pandas as pd
 import numpy as np
 import ifcopenshell
+import matplotlib.pyplot as plt
+from collections import defaultdict
 import tempfile
 import os
 import plotly.express as px  # For interactive plots
-from collections import defaultdict
-# Assuming graph_maker and ifchelper are accessible and contain necessary functions
 
-# Initialize session state for new functionalities
-def initialize_session_state():
-    if 'analysis_choice' not in st.session_state:
-        st.session_state['analysis_choice'] = 'Welcome'
-    if 'Graphs' not in st.session_state:
-        st.session_state['Graphs'] = {}
-    if 'SequenceData' not in st.session_state:
-        st.session_state['SequenceData'] = {}
-    if 'CostScheduleData' not in st.session_state:
-        st.session_state['CostScheduleData'] = {}
-    if 'isHealthDataLoaded' not in st.session_state:
-        st.session_state['isHealthDataLoaded'] = False
+# Function to count building components in an IFC file
+def count_building_components(ifc_file):
+    component_count = defaultdict(int)
+    try:
+        for ifc_entity in ifc_file.by_type('IfcProduct'):
+            component_count[ifc_entity.is_a()] += 1
+    except Exception as e:
+        st.error(f"Error processing IFC file: {e}")
+    return component_count
 
-# Dummy placeholder functions for graph_maker and ifchelper
-# Replace these with actual calls to your graph_maker and ifchelper module functions
-def get_elements_graph(ifc_file):
-    return px.bar(x=["Element 1", "Element 2"], y=[1, 3])  # Placeholder graph
+# Function to read Excel file with caching and error handling
+@st.cache(hash_funcs={tempfile.NamedTemporaryFile: lambda _: None}, allow_output_mutation=True)
+def read_excel(file):
+    try:
+        return pd.read_excel(file, engine='openpyxl')
+    except Exception as e:
+        st.error(f"Failed to read Excel file: {e}")
+        return pd.DataFrame()
 
-def get_high_frequency_entities_graph(ifc_file):
-    return px.pie(values=[1, 2, 3], names=["Type A", "Type B", "Type C"])  # Placeholder graph
+# Unified visualization function for both bar and pie charts using Plotly
+def visualize_component_count(component_count, chart_type='Bar Chart'):
+    labels, values = zip(*sorted(component_count.items(), key=lambda item: item[1], reverse=True)) if component_count else ((), ())
+    if chart_type == 'Bar Chart':
+        fig = px.bar(x=labels, y=values)
+    elif chart_type == 'Pie Chart':
+        fig = px.pie(values=values, names=labels)
+    fig.update_layout(transition_duration=500)
+    return fig
 
-def create_cost_schedule(ifc_file, schedule_name):
-    pass  # Implement cost schedule creation logic
+def detailed_analysis(ifc_file, product_type, sort_by=None):
+    product_count = defaultdict(int)
+    try:
+        for product in ifc_file.by_type(product_type):
+            product_name = product.Name if product.Name else "Unnamed"
+            type_name = product_name.split(':')[0] if product_name else "Unnamed"
+            product_count[type_name] += 1
+    except Exception as e:
+        st.error(f"Error during detailed analysis: {e}")
+        return
 
-def create_work_schedule(ifc_file, schedule_name):
-    pass  # Implement work schedule creation logic
+    labels, values = zip(*product_count.items()) if product_count else ((), ())
+    if values:
+        fig = px.pie(values=values, names=labels, title=f"Distribution of {product_type} Products by Type")
+        st.plotly_chart(fig)
 
-def load_data(ifc_file):
-    # Load and process data, update session state
-    st.session_state['Graphs'] = {
-        "objects_graph": get_elements_graph(ifc_file),
-        "high_frequency_graph": get_high_frequency_entities_graph(ifc_file)
-    }
-    # Add more loading and processing logic as needed
-    st.session_state['isHealthDataLoaded'] = True
+        if sort_by:
+            df = pd.DataFrame({'Type': labels, 'Count': values}).sort_values(by=sort_by, ascending=False)
+            st.table(df)
+    else:
+        st.write(f"No products found for {product_type}.")
+# Initialize session state for storing the user's analysis choice
+if 'analysis_choice' not in st.session_state:
+    st.session_state.analysis_choice = 'Welcome'
 
+def set_analysis_choice(choice):
+    st.session_state.analysis_choice = choice
+    
 def ifc_file_analysis():
     uploaded_file = st.file_uploader("Choose an IFC file", type=['ifc'], key="ifc")
     if uploaded_file is not None:
@@ -51,38 +90,93 @@ def ifc_file_analysis():
             with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file:
                 tmp_file.write(uploaded_file.getvalue())
                 tmp_file_path = tmp_file.name
-
+            
             try:
                 ifc_file = ifcopenshell.open(tmp_file_path)
-                load_data(ifc_file)  # Load data and process for visualization
+                component_count = count_building_components(ifc_file)
+                chart_type = st.radio("Chart Type", options=['Bar Chart', 'Pie Chart'], key="chart")
+                fig = visualize_component_count(component_count, chart_type)
+                st.plotly_chart(fig)
+
+                with st.expander("Show Detailed Component Analysis"):
+                    product_types = sorted({entity.is_a() for entity in ifc_file.by_type('IfcProduct')})
+                    selected_product_type = st.selectbox("Select a product type for detailed analysis", product_types, key="product_type")
+                    sort_by = st.select_slider("Sort by", ["Type", "Count"], value='Count', key="sort")
+                    detailed_analysis(ifc_file, selected_product_type, sort_by)
             finally:
                 os.remove(tmp_file_path)
 
-def draw_graphs():
-    # Draw graphs from loaded data
-    if 'Graphs' in st.session_state and st.session_state['Graphs']:
-        st.plotly_chart(st.session_state['Graphs'].get("objects_graph"))
-        st.plotly_chart(st.session_state['Graphs'].get("high_frequency_graph"))
+def excel_file_analysis():
+    uploaded_file = st.file_uploader("Upload an Excel file", type=['xlsx'], key="excel")
+    if uploaded_file is not None:
+        df = read_excel(uploaded_file)
+        if not df.empty:
+            selected_columns = st.multiselect("Select columns to display", df.columns.tolist(), default=df.columns.tolist(), key="columns")
+            if selected_columns:
+                st.dataframe(df[selected_columns])
+                if st.button("Visualize Data", key="visualize"):
+                    visualize_data(df, selected_columns)
+                if st.button("Generate Insights", key="insights"):
+                    generate_insights(df[selected_columns])
+
+def visualize_data(df, columns):
+    for column in columns:
+        if pd.api.types.is_numeric_dtype(df[column]):
+            fig = px.histogram(df, x=column)
+            st.plotly_chart(fig)
+        else:
+            fig = px.bar(df, x=column, title=f"Bar chart of {column}")
+            st.plotly_chart(fig)
+
+def generate_insights(df):
+    if not df.empty:
+        st.write("Descriptive Statistics:", df.describe())
+        # Placeholder for more sophisticated analysis or predictive modeling
+
+def welcome_page():
+    st.title("IFC and Excel File Analysis Tool")
+    st.write("""
+
+This Streamlit application provides an interactive interface for analyzing
+IFC (Industry Foundation Classes) files and Excel spreadsheets. It allows
+users to visualize component counts in IFC files and perform data analysis
+and visualization on Excel files.
+
+License:
+This project is licensed under the GNU General Public License v3.0.
+For more details, see the LICENSE file in the root directory of this source tree
+or visit https://www.gnu.org/licenses/gpl-3.0.en.html.
+
+Copyright:
+Copyright (C) [2024] [Mostafa Gabr].
+All rights reserved.
+
+""")
 
 def main():
-    st.title("IFC and Excel File Analysis Tool")
-    initialize_session_state()
-
     st.sidebar.title("Navigation")
     if st.sidebar.button("Home"):
-        st.session_state['analysis_choice'] = 'Welcome'
+        set_analysis_choice("Welcome")
     if st.sidebar.button("Analyze IFC File"):
-        st.session_state['analysis_choice'] = 'IFC File Analysis'
+        set_analysis_choice("IFC File Analysis")
     if st.sidebar.button("Analyze Excel File"):
-        st.session_state['analysis_choice'] = 'Excel File Analysis'
+        set_analysis_choice("Excel File Analysis")
 
-    if st.session_state['analysis_choice'] == 'Welcome':
-        st.write("Welcome! Select an analysis type from the sidebar to get started.")
-    elif st.session_state['analysis_choice'] == "IFC File Analysis":
+    if st.session_state.analysis_choice == 'Welcome':
+        welcome_page()
+    elif st.session_state.analysis_choice == "IFC File Analysis":
         ifc_file_analysis()
-        draw_graphs()  # Draw visualization graphs
-    # elif st.session_state['analysis_choice'] == "Excel File Analysis":
-        # Place your Excel file analysis code here
+    elif st.session_state.analysis_choice == "Excel File Analysis":
+        excel_file_analysis()
 
 if __name__ == "__main__":
     main()
+
+# Add copyright notice and license information to the sidebar
+st.sidebar.markdown("""
+----------------
+#### Copyright Notice
+Copyright (C) [2024] [Mostafa Gabr]. All rights reserved.
+
+This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
+""")
