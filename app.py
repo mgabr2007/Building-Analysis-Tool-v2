@@ -101,7 +101,7 @@ def ifc_file_analysis():
                 with st.expander("Show Detailed Component Analysis"):
                     product_types = sorted({entity.is_a() for entity in ifc_file.by_type('IfcProduct')})
                     selected_product_type = st.selectbox("Select a product type for detailed analysis", product_types, key="product_type")
-                    sort_by = st.select_slider("Sort by", ["Type", "Count"], value='Count' key="sort")
+                    sort_by = st.select_slider("Sort by", ["Type", "Count"], value='Count', key="sort")
                     detailed_analysis(ifc_file, selected_product_type, sort_by)
             finally:
                 os.remove(tmp_file_path)
