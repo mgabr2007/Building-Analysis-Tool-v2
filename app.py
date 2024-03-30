@@ -205,9 +205,14 @@ def main():
     elif st.session_state.analysis_choice == "Analyze Excel File":
         excel_file_analysis()
     elif st.session_state.analysis_choice == "Compare IFC Files":
-        compare_ifc_files_ui()  # This is a placeholder for your IFC files comparison UI
+        # Temporary placeholder message
+        st.write("IFC Files Comparison feature is under construction.")
     elif st.session_state.analysis_choice == "Compare Excel Files":
-        compare_excel_files_ui()  # This is a placeholder for your Excel files comparison UI
+        # Temporary placeholder message
+        st.write("Excel Files Comparison feature is under construction.")
+
+# Ensure welcome_page(), ifc_file_analysis(), and excel_file_analysis() are defined above this main function
+
 
 # Define your page functions like welcome_page(), ifc_file_analysis(), excel_file_analysis(), compare_ifc_files_ui(), and compare_excel_files_ui() here
 
