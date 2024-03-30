@@ -137,35 +137,14 @@ def compare_ifc_files_ui():
     st.title("Compare IFC Files")
     uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
     uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
-    
-    if uploaded_file1 and uploaded_file2:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
-            tmp_file1.write(uploaded_file1.getvalue())
-            tmp_file2.write(uploaded_file2.getvalue())
-            ifc_file1 = ifcopenshell.open(tmp_file1.name)
-            ifc_file2 = ifcopenshell.open(tmp_file2.name)
-        
-        comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
-        st.write("Comparison Result:")
-        st.dataframe(pd.DataFrame(comparison_result).transpose())
-        
-        # Clean up temporary files
-        os.remove(tmp_file1.name)
-        os.remove(tmp_file2.name)
-def compare_ifc_files_ui():
-    st.title("Compare IFC Files")
-    uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
-    uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
 
     if uploaded_file1 and uploaded_file2:
-        # Write uploaded files to temporary files
         with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
             tmp_file1.write(uploaded_file1.getvalue())
             tmp_file2.write(uploaded_file2.getvalue())
             tmp_file1.flush()
             tmp_file2.flush()
 
-            # Attempt to open the temporary IFC files
             try:
                 ifc_file1 = ifcopenshell.open(tmp_file1.name)
                 ifc_file2 = ifcopenshell.open(tmp_file2.name)
@@ -173,15 +152,13 @@ def compare_ifc_files_ui():
                 st.error(f"Failed to load IFC files: {e}")
                 return
 
-        # Proceed with comparison if both files are successfully loaded
-        try:
-            comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
-            st.write("Comparison Result:")
-            st.dataframe(pd.DataFrame(comparison_result).transpose())
-        finally:
-            # Clean up temporary files
-            os.remove(tmp_file1.name)
-            os.remove(tmp_file2.name)
+            try:
+                comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
+                st.write("Comparison Result:")
+                st.dataframe(pd.DataFrame(comparison_result).transpose())
+            finally:
+                os.remove(tmp_file1.name)
+                os.remove(tmp_file2.name)
 
 def compare_excel_files(df1, df2, columns):
     comparison_result = {}
