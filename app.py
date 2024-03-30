@@ -201,11 +201,11 @@ def main():
     if st.sidebar.button("Compare Excel Files"):
         set_analysis_choice("Compare Excel Files")
 
-    # Default page to show if no button has been clicked yet
+        # Default page to show if no button has been clicked yet
     if 'analysis_choice' not in st.session_state:
         st.session_state.analysis_choice = "Welcome"
 
-    # Switch case to display the selected page
+    # Handling the display based on the user's choice
     if st.session_state.analysis_choice == "Welcome":
         welcome_page()
     elif st.session_state.analysis_choice == "Analyze IFC File":
@@ -213,16 +213,9 @@ def main():
     elif st.session_state.analysis_choice == "Analyze Excel File":
         excel_file_analysis()
     elif st.session_state.analysis_choice == "Compare IFC Files":
-        # Temporary placeholder message
-        st.write("IFC Files Comparison feature is under construction.")
+        compare_ifc_files_ui()  # UI for comparing IFC files
     elif st.session_state.analysis_choice == "Compare Excel Files":
-        # Temporary placeholder message
-        st.write("Excel Files Comparison feature is under construction.")
-
-# Ensure welcome_page(), ifc_file_analysis(), and excel_file_analysis() are defined above this main function
-
-
-# Define your page functions like welcome_page(), ifc_file_analysis(), excel_file_analysis(), compare_ifc_files_ui(), and compare_excel_files_ui() here
+        compare_excel_files_ui()  # UI for comparing Excel files
 
 if __name__ == "__main__":
     main()
