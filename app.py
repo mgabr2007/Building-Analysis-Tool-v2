@@ -133,18 +133,26 @@ def generate_insights(df):
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
 # Comparison Analysis Functions
-def compare_ifc_files(ifc_file1, ifc_file2):
-    component_count1 = count_building_components(ifc_file1)
-    component_count2 = count_building_components(ifc_file2)
-    comparison_result = {}
+def compare_ifc_files_ui():
+    st.title("Compare IFC Files")
+    uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
+    uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
     
-    all_keys = set(component_count1.keys()).union(set(component_count2.keys()))
-    for key in all_keys:
-        count1 = component_count1.get(key, 0)
-        count2 = component_count2.get(key, 0)
-        comparison_result[key] = {'File 1': count1, 'File 2': count2, 'Difference': count1 - count2}
-    
-    return comparison_result
+    if uploaded_file1 and uploaded_file2:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
+            tmp_file1.write(uploaded_file1.getvalue())
+            tmp_file2.write(uploaded_file2.getvalue())
+            ifc_file1 = ifcopenshell.open(tmp_file1.name)
+            ifc_file2 = ifcopenshell.open(tmp_file2.name)
+        
+        comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
+        st.write("Comparison Result:")
+        st.dataframe(pd.DataFrame(comparison_result).transpose())
+        
+        # Clean up temporary files
+        os.remove(tmp_file1.name)
+        os.remove(tmp_file2.name)
+
 
 def compare_excel_files(df1, df2, columns):
     comparison_result = {}
