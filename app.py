@@ -156,7 +156,7 @@ def compare_ifc_files_ui(ifc_file1, ifc_file2):
 
     return comparison_result
 
-def compare_excel_files(df1, df2, columns):
+def compare_excel_files_ui(df1, df2, columns):
     comparison_result = {}
     for column in columns:
         if pd.api.types.is_numeric_dtype(df1[column]) and pd.api.types.is_numeric_dtype(df2[column]):
