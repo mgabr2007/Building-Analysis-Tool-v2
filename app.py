@@ -158,6 +158,13 @@ def compare_ifc_files(ifc_file1, ifc_file2):
 
 def compare_ifc_files_ui():
     st.title("Compare IFC Files")
+    st.write("""Please follow the steps below to compare the components of two IFC (Industry Foundation Classes) files:
+
+Upload First IFC File: Click on the "Choose File" button below labeled "Choose the first IFC file". Navigate to the location of the first IFC file on your device and select it for upload.
+
+Upload Second IFC File: Similarly, use the second "Choose File" button labeled "Choose the second IFC file" to upload the second IFC file you wish to compare with the first one.
+
+After uploading both files, the application will automatically process and compare them, displaying the comparison results on this page. This comparison will help you understand the differences in building components, such as walls, doors, and windows, between the two IFC files.""")
     uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
     uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
 
