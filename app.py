@@ -156,6 +156,35 @@ def compare_ifc_files(ifc_file1, ifc_file2):
 
     return comparison_result
 
+def compare_ifc_files_ui():
+    st.title("Compare IFC Files")
+    uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
+    uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
+
+    if uploaded_file1 and uploaded_file2:
+        # Temporary files to hold the uploaded IFC files for comparison
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, \
+             tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
+            tmp_file1.write(uploaded_file1.getvalue())
+            tmp_file2.write(uploaded_file2.getvalue())
+            tmp_file1_path = tmp_file1.name
+            tmp_file2_path = tmp_file2.name
+
+        # Load the IFC files using ifcopenshell
+        ifc_file1 = ifcopenshell.open(tmp_file1_path)
+        ifc_file2 = ifcopenshell.open(tmp_file2_path)
+
+        # Perform the comparison
+        comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
+        
+        # Display the comparison results
+        st.write("Comparison Result:")
+        for component_type, counts in comparison_result.items():
+            st.write(f"{component_type}: File 1 Count = {counts['File 1 Count']}, File 2 Count = {counts['File 2 Count']}, Difference = {counts['Difference']}")
+
+        # Cleanup temporary files
+        os.remove(tmp_file1_path)
+        os.remove(tmp_file2_path)
 
 def compare_excel_files_ui():
     st.title("Compare Excel Files")
