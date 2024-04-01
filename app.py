@@ -133,7 +133,7 @@ def generate_insights(df):
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
 # Comparison Analysis Functions
-def compare_ifc_files(ifc_file1, ifc_file2):
+def compare_ifc_files_ui(ifc_file1, ifc_file2):
     # Compare the building components of two IFC files
     components1 = count_building_components(ifc_file1)
     components2 = count_building_components(ifc_file2)
