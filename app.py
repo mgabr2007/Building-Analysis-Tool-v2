@@ -158,8 +158,8 @@ def compare_ifc_files(ifc_file1, ifc_file2):
 
 def compare_ifc_files_ui():
     st.title("Compare IFC Files")
-   st.write("""
-### Instructions for Comparing IFC Files:
+    st.write("""
+            ### Instructions for Comparing IFC Files:
 
 Please follow the steps below to compare the components of two IFC (Industry Foundation Classes) files:
 
