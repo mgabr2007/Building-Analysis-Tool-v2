@@ -159,7 +159,7 @@ def compare_ifc_files(ifc_file1, ifc_file2):
 
 def compare_ifc_files_ui():
     st.title("Compare IFC Files")
-    # Instructions for the user
+    
     st.write("""
     ### Instructions for Comparing IFC Files:
 
@@ -215,6 +215,67 @@ def compare_ifc_files_ui():
         # Generate and display the pie chart for overall differences
         fig_pie = go.Figure(data=[go.Pie(labels=component_types, values=differences, title='Overall Differences in Selected Components')])
         st.plotly_chart(fig_pie)
+
+        os.remove(tmp_file1_path)
+        os.remove(tmp_file2_path)
+def compare_ifc_files_ui():
+    st.title("Compare IFC Files")
+    # Instructions for the user
+    st.write("""
+### Instructions for Comparing IFC Files:
+
+Please follow the steps below to compare the components of two IFC (Industry Foundation Classes) files:
+
+1. **Upload First IFC File:** Click on the "Choose File" button below labeled **"Choose the first IFC file"**. Navigate to the location of the first IFC file on your device and select it for upload.
+
+2. **Upload Second IFC File:** Similarly, use the second "Choose File" button labeled **"Choose the second IFC file"** to upload the second IFC file you wish to compare with the first one.
+
+After uploading both files, you will be prompted to:
+
+3. **Select a Component Type for Detailed Comparison:** From the dropdown menu, select one of the available component types (e.g., walls, doors, windows) to compare between the two IFC files. The application will display a bar chart showing the count of the selected component type in both files, along with their difference.
+
+4. **View Overall Comparison:** After selecting a specific component type, you can also choose to view an overall comparison of all components by clicking the **"Show Overall Comparison"** button. This will display a pie chart visualizing the proportion of differences across all component types, giving you a comprehensive overview of how the two IFC files differ.
+
+This step-by-step process will help you understand the detailed differences in building components between the two IFC files, as well as provide an overall summary of the differences.
+""")
+
+    uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
+    uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
+
+    if uploaded_file1 and uploaded_file2:
+        file_name1 = uploaded_file1.name
+        file_name2 = uploaded_file2.name
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, \
+             tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
+            tmp_file1.write(uploaded_file1.getvalue())
+            tmp_file2.write(uploaded_file2.getvalue())
+            tmp_file1_path = tmp_file1.name
+            tmp_file2_path = tmp_file2.name
+
+        ifc_file1 = ifcopenshell.open(tmp_file1_path)
+        ifc_file2 = ifcopenshell.open(tmp_file2_path)
+        comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
+
+        all_component_types = list(comparison_result.keys())
+        selected_component = st.selectbox("Select a component type for detailed comparison:", all_component_types, key="component_type")
+        
+        # Filter the comparison_result for the selected component
+        if selected_component:
+            component_data = comparison_result[selected_component]
+            fig = go.Figure(data=[
+                go.Bar(name=file_name1, x=[selected_component], y=[component_data['File 1 Count']], marker_color='indianred'),
+                go.Bar(name=file_name2, x=[selected_component], y=[component_data['File 2 Count']], marker_color='lightseagreen'),
+                go.Bar(name='Difference', x=[selected_component], y=[component_data['Difference']], marker_color='lightslategray')
+            ])
+            fig.update_layout(barmode='group', title_text=f'Comparison of {selected_component}', xaxis_title="Component Type", yaxis_title="Count")
+            st.plotly_chart(fig)
+
+            # Show overall comparison with a pie chart for all components
+            if st.button("Show Overall Comparison"):
+                differences = [comparison_result[comp]['Difference'] for comp in all_component_types]
+                fig_pie = go.Figure(data=[go.Pie(labels=all_component_types, values=differences, title='Overall Differences in Components')])
+                st.plotly_chart(fig_pie)
 
         os.remove(tmp_file1_path)
         os.remove(tmp_file2_path)
