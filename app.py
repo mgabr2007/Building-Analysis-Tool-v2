@@ -186,24 +186,6 @@ def compare_ifc_files_ui():
         os.remove(tmp_file1_path)
         os.remove(tmp_file2_path)
 
-def compare_excel_files_ui():
-    st.title("Compare Excel Files")
-    uploaded_file1 = st.file_uploader("Upload the first Excel file", type=['xlsx'], key="excel1")
-    uploaded_file2 = st.file_uploader("Upload the second Excel file", type=['xlsx'], key="excel2")
-
-    if uploaded_file1 and uploaded_file2:
-        df1 = read_excel(uploaded_file1)
-        df2 = read_excel(uploaded_file2)
-
-        if not df1.empty and not df2.empty:
-            common_columns = list(set(df1.columns) & set(df2.columns))
-            selected_columns = st.multiselect("Select columns to compare", common_columns, default=common_columns)
-            
-            if selected_columns:
-                comparison_result = compare_excel_files(df1, df2, selected_columns)
-                st.write("Comparison Result:")
-                st.json(comparison_result)  # Adjusting to use st.json for readability
-
     
 def welcome_page():
     st.title("IFC and Excel File Analysis Tool")
@@ -252,10 +234,7 @@ def main():
         excel_file_analysis()
     elif st.session_state.analysis_choice == "Compare IFC Files":
         compare_ifc_files_ui()  # Ensure this function does not require arguments and is defined correctly
-    elif st.session_state.analysis_choice == "Compare Excel Files":
-        compare_excel_files_ui()  # Similarly, ensure correct definition without requiring direct arguments
 
-# Ensure compare_ifc_files_ui is correctly defined to manage UI elements and not called directly with arguments
 
 if __name__ == "__main__":
     main()
