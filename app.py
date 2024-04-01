@@ -211,11 +211,10 @@ def main():
     if st.sidebar.button("Compare Excel Files"):
         set_analysis_choice("Compare Excel Files")
 
-        # Default page to show if no button has been clicked yet
+    # Handling the display based on the user's choice
     if 'analysis_choice' not in st.session_state:
         st.session_state.analysis_choice = "Welcome"
 
-    # Handling the display based on the user's choice
     if st.session_state.analysis_choice == "Welcome":
         welcome_page()
     elif st.session_state.analysis_choice == "Analyze IFC File":
@@ -223,9 +222,12 @@ def main():
     elif st.session_state.analysis_choice == "Analyze Excel File":
         excel_file_analysis()
     elif st.session_state.analysis_choice == "Compare IFC Files":
-        compare_ifc_files_ui()  # Corrected to not pass arguments
+        compare_ifc_files_ui()  # Ensure this function does not require arguments and is defined correctly
     elif st.session_state.analysis_choice == "Compare Excel Files":
-        compare_excel_files_ui()  # Corrected to not pass arguments
+        compare_excel_files_ui()  # Similarly, ensure correct definition without requiring direct arguments
+
+# Ensure compare_ifc_files_ui is correctly defined to manage UI elements and not called directly with arguments
+
 if __name__ == "__main__":
     main()
 # Add copyright notice and license information to the sidebar
