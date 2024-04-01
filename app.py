@@ -155,7 +155,6 @@ def compare_ifc_files(ifc_file1, ifc_file2):
         comparison_result[component_type]['Difference'] = count1 - count2
 
     return comparison_result
-
 def compare_ifc_files_ui():
     st.title("Compare IFC Files")
     # Instructions for the user
@@ -170,12 +169,10 @@ def compare_ifc_files_ui():
 
     After uploading both files, the application will automatically process and compare them, displaying the comparison results on this page. This comparison will help you understand the differences in building components, such as walls, doors, and windows, between the two IFC files.
     """)
-    
     uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
     uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
 
     if uploaded_file1 and uploaded_file2:
-        # Extracting the real names of the uploaded files
         file_name1 = uploaded_file1.name
         file_name2 = uploaded_file2.name
 
@@ -190,15 +187,26 @@ def compare_ifc_files_ui():
         ifc_file2 = ifcopenshell.open(tmp_file2_path)
         comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
 
-        # Display the comparison results, including the file names
-        st.write(f"Comparison Result between \"{file_name1}\" and \"{file_name2}\":")
-        for component_type, counts in comparison_result.items():
-            st.write(f"{component_type}: {file_name1} Count = {counts['File 1 Count']}, {file_name2} Count = {counts['File 2 Count']}, Difference = {counts['Difference']}")
+        # Create lists for the component types, counts for each file, and differences
+        component_types = list(comparison_result.keys())
+        counts_file1 = [comparison_result[component]['File 1 Count'] for component in component_types]
+        counts_file2 = [comparison_result[component]['File 2 Count'] for component in component_types]
+        differences = [comparison_result[component]['Difference'] for component in component_types]
+
+        # Generate the Plotly figure
+        fig = go.Figure(data=[
+            go.Bar(name=file_name1, x=component_types, y=counts_file1),
+            go.Bar(name=file_name2, x=component_types, y=counts_file2),
+            go.Bar(name='Difference', x=component_types, y=differences)
+        ])
+        # Change the bar mode
+        fig.update_layout(barmode='group', title_text='IFC File Component Comparison', xaxis_title="Component Type", yaxis_title="Count")
+
+        st.plotly_chart(fig)
 
         os.remove(tmp_file1_path)
         os.remove(tmp_file2_path)
 
-    
 def welcome_page():
     st.title("IFC and Excel File Analysis Tool")
     st.write("""
