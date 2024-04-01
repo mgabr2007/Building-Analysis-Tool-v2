@@ -133,32 +133,28 @@ def generate_insights(df):
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
 # Comparison Analysis Functions
-def compare_ifc_files_ui():
-    st.title("Compare IFC Files")
-    uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
-    uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
+def compare_ifc_files(ifc_file1, ifc_file2):
+    # Compare the building components of two IFC files
+    components1 = count_building_components(ifc_file1)
+    components2 = count_building_components(ifc_file2)
 
-    if uploaded_file1 and uploaded_file2:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
-            tmp_file1.write(uploaded_file1.getvalue())
-            tmp_file2.write(uploaded_file2.getvalue())
-            tmp_file1.flush()
-            tmp_file2.flush()
+    # Initialize a dictionary to store comparison results
+    comparison_result = defaultdict(dict)
 
-            try:
-                ifc_file1 = ifcopenshell.open(tmp_file1.name)
-                ifc_file2 = ifcopenshell.open(tmp_file2.name)
-            except Exception as e:
-                st.error(f"Failed to load IFC files: {e}")
-                return
+    # Get all unique component types from both files
+    all_component_types = set(components1.keys()) | set(components2.keys())
 
-            try:
-                comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
-                st.write("Comparison Result:")
-                st.dataframe(pd.DataFrame(comparison_result).transpose())
-            finally:
-                os.remove(tmp_file1.name)
-                os.remove(tmp_file2.name)
+    # Loop through each component type and compare
+    for component_type in all_component_types:
+        count1 = components1.get(component_type, 0)
+        count2 = components2.get(component_type, 0)
+        
+        # Store comparison data
+        comparison_result[component_type]['File 1 Count'] = count1
+        comparison_result[component_type]['File 2 Count'] = count2
+        comparison_result[component_type]['Difference'] = count1 - count2
+
+    return comparison_result
 
 def compare_excel_files(df1, df2, columns):
     comparison_result = {}
