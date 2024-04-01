@@ -158,22 +158,27 @@ def compare_ifc_files(ifc_file1, ifc_file2):
 
 def compare_ifc_files_ui():
     st.title("Compare IFC Files")
+    # Instructions for the user
     st.write("""
-            ### Instructions for Comparing IFC Files:
+    ### Instructions for Comparing IFC Files:
 
-Please follow the steps below to compare the components of two IFC (Industry Foundation Classes) files:
+    Please follow the steps below to compare the components of two IFC (Industry Foundation Classes) files:
 
-1. **Upload First IFC File:** Click on the "Choose File" button below labeled **"Choose the first IFC file"**. Navigate to the location of the first IFC file on your device and select it for upload.
+    1. **Upload First IFC File:** Click on the "Choose File" button below labeled **"Choose the first IFC file"**. Navigate to the location of the first IFC file on your device and select it for upload.
 
-2. **Upload Second IFC File:** Similarly, use the second "Choose File" button labeled **"Choose the second IFC file"** to upload the second IFC file you wish to compare with the first one.
+    2. **Upload Second IFC File:** Similarly, use the second "Choose File" button labeled **"Choose the second IFC file"** to upload the second IFC file you wish to compare with the first one.
 
-After uploading both files, the application will automatically process and compare them, displaying the comparison results on this page. This comparison will help you understand the differences in building components, such as walls, doors, and windows, between the two IFC files.
-""")
+    After uploading both files, the application will automatically process and compare them, displaying the comparison results on this page. This comparison will help you understand the differences in building components, such as walls, doors, and windows, between the two IFC files.
+    """)
+    
     uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
     uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
 
     if uploaded_file1 and uploaded_file2:
-        # Temporary files to hold the uploaded IFC files for comparison
+        # Extracting the real names of the uploaded files
+        file_name1 = uploaded_file1.name
+        file_name2 = uploaded_file2.name
+
         with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, \
              tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
             tmp_file1.write(uploaded_file1.getvalue())
@@ -181,19 +186,15 @@ After uploading both files, the application will automatically process and compa
             tmp_file1_path = tmp_file1.name
             tmp_file2_path = tmp_file2.name
 
-        # Load the IFC files using ifcopenshell
         ifc_file1 = ifcopenshell.open(tmp_file1_path)
         ifc_file2 = ifcopenshell.open(tmp_file2_path)
-
-        # Perform the comparison
         comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
-        
-        # Display the comparison results
-        st.write("Comparison Result:")
-        for component_type, counts in comparison_result.items():
-            st.write(f"{component_type}: File 1 Count = {counts['File 1 Count']}, File 2 Count = {counts['File 2 Count']}, Difference = {counts['Difference']}")
 
-        # Cleanup temporary files
+        # Display the comparison results, including the file names
+        st.write(f"Comparison Result between \"{file_name1}\" and \"{file_name2}\":")
+        for component_type, counts in comparison_result.items():
+            st.write(f"{component_type}: {file_name1} Count = {counts['File 1 Count']}, {file_name2} Count = {counts['File 2 Count']}, Difference = {counts['Difference']}")
+
         os.remove(tmp_file1_path)
         os.remove(tmp_file2_path)
 
