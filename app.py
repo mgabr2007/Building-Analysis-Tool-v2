@@ -133,40 +133,47 @@ def generate_insights(df):
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
 # Comparison Analysis Functions
-def compare_ifc_files_ui(ifc_file1, ifc_file2):
-    # Compare the building components of two IFC files
-    components1 = count_building_components(ifc_file1)
-    components2 = count_building_components(ifc_file2)
+def compare_ifc_files_ui():
+    st.title("Compare IFC Files")
+    uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
+    uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
 
-    # Initialize a dictionary to store comparison results
-    comparison_result = defaultdict(dict)
+    if uploaded_file1 and uploaded_file2:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, \
+             tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
+            tmp_file1.write(uploaded_file1.getvalue())
+            tmp_file2.write(uploaded_file2.getvalue())
+            tmp_file1_path = tmp_file1.name
+            tmp_file2_path = tmp_file2.name
 
-    # Get all unique component types from both files
-    all_component_types = set(components1.keys()) | set(components2.keys())
-
-    # Loop through each component type and compare
-    for component_type in all_component_types:
-        count1 = components1.get(component_type, 0)
-        count2 = components2.get(component_type, 0)
+        ifc_file1 = ifcopenshell.open(tmp_file1_path)
+        ifc_file2 = ifcopenshell.open(tmp_file2_path)
+        comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
+        st.write("Comparison Result:")
+        st.json(comparison_result)  # Using st.json for better readability of the nested dictionary
         
-        # Store comparison data
-        comparison_result[component_type]['File 1 Count'] = count1
-        comparison_result[component_type]['File 2 Count'] = count2
-        comparison_result[component_type]['Difference'] = count1 - count2
+        os.remove(tmp_file1_path)
+        os.remove(tmp_file2_path)
 
-    return comparison_result
 
-def compare_excel_files_ui(df1, df2, columns):
-    comparison_result = {}
-    for column in columns:
-        if pd.api.types.is_numeric_dtype(df1[column]) and pd.api.types.is_numeric_dtype(df2[column]):
-            mean1, mean2 = df1[column].mean(), df2[column].mean()
-            sum1, sum2 = df1[column].sum(), df2[column].sum()
-            comparison_result[column] = {
-                'Mean File 1': mean1, 'Mean File 2': mean2, 'Mean Difference': mean1 - mean2,
-                'Sum File 1': sum1, 'Sum File 2': sum2, 'Sum Difference': sum1 - sum2
-            }
-    return comparison_result
+def compare_excel_files_ui():
+    st.title("Compare Excel Files")
+    uploaded_file1 = st.file_uploader("Upload the first Excel file", type=['xlsx'], key="excel1")
+    uploaded_file2 = st.file_uploader("Upload the second Excel file", type=['xlsx'], key="excel2")
+
+    if uploaded_file1 and uploaded_file2:
+        df1 = read_excel(uploaded_file1)
+        df2 = read_excel(uploaded_file2)
+
+        if not df1.empty and not df2.empty:
+            common_columns = list(set(df1.columns) & set(df2.columns))
+            selected_columns = st.multiselect("Select columns to compare", common_columns, default=common_columns)
+            
+            if selected_columns:
+                comparison_result = compare_excel_files(df1, df2, selected_columns)
+                st.write("Comparison Result:")
+                st.json(comparison_result)  # Adjusting to use st.json for readability
+
     
 def welcome_page():
     st.title("IFC and Excel File Analysis Tool")
