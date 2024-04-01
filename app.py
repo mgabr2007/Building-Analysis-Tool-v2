@@ -157,67 +157,7 @@ def compare_ifc_files(ifc_file1, ifc_file2):
 
     return comparison_result
 
-def compare_ifc_files_ui():
-    st.title("Compare IFC Files")
-    
-    st.write("""
-    ### Instructions for Comparing IFC Files:
 
-    Please follow the steps below to compare the components of two IFC (Industry Foundation Classes) files:
-
-    1. **Upload First IFC File:** Click on the "Choose File" button below labeled **"Choose the first IFC file"**. Navigate to the location of the first IFC file on your device and select it for upload.
-
-    2. **Upload Second IFC File:** Similarly, use the second "Choose File" button labeled **"Choose the second IFC file"** to upload the second IFC file you wish to compare with the first one.
-
-    After uploading both files, the application will automatically process and compare them, displaying the comparison results on this page. This comparison will help you understand the differences in building components, such as walls, doors, and windows, between the two IFC files.
-    """)
-    
-
-    uploaded_file1 = st.file_uploader("Choose the first IFC file", type=['ifc'], key="ifc1")
-    uploaded_file2 = st.file_uploader("Choose the second IFC file", type=['ifc'], key="ifc2")
-
-    if uploaded_file1 and uploaded_file2:
-        file_name1 = uploaded_file1.name
-        file_name2 = uploaded_file2.name
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file1, \
-             tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp_file2:
-            tmp_file1.write(uploaded_file1.getvalue())
-            tmp_file2.write(uploaded_file2.getvalue())
-            tmp_file1_path = tmp_file1.name
-            tmp_file2_path = tmp_file2.name
-
-        ifc_file1 = ifcopenshell.open(tmp_file1_path)
-        ifc_file2 = ifcopenshell.open(tmp_file2_path)
-        comparison_result = compare_ifc_files(ifc_file1, ifc_file2)
-
-        # Let the user select which component types to compare
-        all_component_types = list(comparison_result.keys())
-        selected_components = st.multiselect('Select component types to compare:', all_component_types, default=all_component_types)
-
-        # Filter the comparison_result based on the selected components
-        filtered_comparison_result = {component: comparison_result[component] for component in selected_components}
-
-        # Generate and display the bar chart for selected components
-        component_types = list(filtered_comparison_result.keys())
-        counts_file1 = [filtered_comparison_result[component]['File 1 Count'] for component in component_types]
-        counts_file2 = [filtered_comparison_result[component]['File 2 Count'] for component in component_types]
-        differences = [filtered_comparison_result[component]['Difference'] for component in component_types]
-
-        fig = go.Figure(data=[
-            go.Bar(name=file_name1, x=component_types, y=counts_file1),
-            go.Bar(name=file_name2, x=component_types, y=counts_file2),
-            go.Bar(name='Difference', x=component_types, y=differences)
-        ])
-        fig.update_layout(barmode='group', title_text='Selected IFC File Component Comparison', xaxis_title="Component Type", yaxis_title="Count")
-        st.plotly_chart(fig)
-
-        # Generate and display the pie chart for overall differences
-        fig_pie = go.Figure(data=[go.Pie(labels=component_types, values=differences, title='Overall Differences in Selected Components')])
-        st.plotly_chart(fig_pie)
-
-        os.remove(tmp_file1_path)
-        os.remove(tmp_file2_path)
 def compare_ifc_files_ui():
     st.title("Compare IFC Files")
     # Instructions for the user
