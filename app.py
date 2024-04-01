@@ -222,10 +222,9 @@ def main():
     elif st.session_state.analysis_choice == "Analyze Excel File":
         excel_file_analysis()
     elif st.session_state.analysis_choice == "Compare IFC Files":
-        compare_ifc_files_ui()  # UI for comparing IFC files
+        compare_ifc_files_ui()  # Corrected to not pass arguments
     elif st.session_state.analysis_choice == "Compare Excel Files":
-        compare_excel_files_ui()  # UI for comparing Excel files
-
+        compare_excel_files_ui()  # Corrected to not pass arguments
 if __name__ == "__main__":
     main()
 # Add copyright notice and license information to the sidebar
