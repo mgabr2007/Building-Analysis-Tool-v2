@@ -25,6 +25,7 @@ from collections import defaultdict
 import tempfile
 import os
 import plotly.express as px  # For interactive plots
+import plotly.graph_objects as go
 
 # Function to count building components in an IFC file
 def count_building_components(ifc_file):
