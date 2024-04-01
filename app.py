@@ -219,8 +219,7 @@ def main():
         set_analysis_choice("Analyze Excel File")
     if st.sidebar.button("Compare IFC Files"):
         set_analysis_choice("Compare IFC Files")
-    if st.sidebar.button("Compare Excel Files"):
-        set_analysis_choice("Compare Excel Files")
+
 
     # Handling the display based on the user's choice
     if 'analysis_choice' not in st.session_state:
