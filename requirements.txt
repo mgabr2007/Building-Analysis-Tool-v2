@@ -5,3 +5,4 @@ ifcopenshell
 matplotlib
 plotly
 openpyxl
+scipy
