@@ -38,7 +38,7 @@ def count_building_components(ifc_file):
     return component_count
 
 # Function to read Excel file with caching and error handling
-@st.cache(hash_funcs={tempfile.NamedTemporaryFile: lambda _: None}, allow_output_mutation=True)
+@st.cache_data(hash_funcs={tempfile.NamedTemporaryFile: lambda _: None}, persist=True)
 def read_excel(file):
     try:
         return pd.read_excel(file, engine='openpyxl')
@@ -77,13 +77,14 @@ def detailed_analysis(ifc_file, product_type, sort_by=None):
             st.table(df)
     else:
         st.write(f"No products found for {product_type}.")
+
 # Initialize session state for storing the user's analysis choice
 if 'analysis_choice' not in st.session_state:
     st.session_state.analysis_choice = 'Welcome'
 
 def set_analysis_choice(choice):
     st.session_state.analysis_choice = choice
-    
+
 def ifc_file_analysis():
     uploaded_file = st.file_uploader("Choose an IFC file", type=['ifc'], key="ifc")
     if uploaded_file is not None:
@@ -133,6 +134,7 @@ def generate_insights(df):
     if not df.empty:
         st.write("Descriptive Statistics:", df.describe())
         # Placeholder for more sophisticated analysis or predictive modeling
+
 # Comparison Analysis Functions
 def compare_ifc_files(ifc_file1, ifc_file2):
     # Compare the building components of two IFC files
@@ -156,7 +158,6 @@ def compare_ifc_files(ifc_file1, ifc_file2):
         comparison_result[component_type]['Difference'] = count1 - count2
 
     return comparison_result
-
 
 def compare_ifc_files_ui():
     st.title("Compare IFC Files")
@@ -270,6 +271,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 # Add copyright notice and license information to the sidebar
 st.sidebar.markdown("""
 ----------------
