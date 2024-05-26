@@ -1,8 +1,6 @@
 streamlit
 pandas
 numpy
-ifcopenshell
 matplotlib
+ifcopenshell
 plotly
-openpyxl
-scipy
